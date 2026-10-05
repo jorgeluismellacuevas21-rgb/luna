@@ -1,11 +1,3 @@
 {
-
-"rewrites"
-:
-[
-
-{
-2 keys
-}
-]
+  "version": 2
 }
