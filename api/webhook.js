@@ -1,3 +1,6 @@
+// Memoria temporal de peticiones para Rate Limiting (Capa 1 Anti-Spam)
+const requestTracker = new Map();
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
@@ -16,8 +19,26 @@ export default async function handler(req, res) {
     if (message && message.text) {
       const fromNumber = message.from;
       const rawMsg = message.text.body || "";
-      const cleanMsg = rawMsg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+      // --- ESCUDO ANTI-SPAM (CAPA 1) ---
+      // 1. Bloqueo por longitud excesiva (>1000 caracteres)
+      if (rawMsg.length > 1000) {
+        return res.status(200).json({ status: 'ignored_spam_length' });
+      }
+
+      // 2. Rate Limiting: Máximo 4 mensajes cada 10 segundos por número
+      const now = Date.now();
+      const userRequests = requestTracker.get(fromNumber) || [];
+      const recentRequests = userRequests.filter(time => now - time < 10000);
+
+      if (recentRequests.length >= 4) {
+        return res.status(200).json({ status: 'ignored_rate_limit' });
+      }
+      recentRequests.push(now);
+      requestTracker.set(fromNumber, recentRequests);
+
+      // --- LÓGICA COMERCIAL BIFURCADA ---
+      const cleanMsg = rawMsg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const triggersIA = ["10", "120", "implementa", "soluciones", "incluye", "ia", "crm", "sdr", "bot", "automatizar", "academy"];
       const esIA = triggersIA.some(word => cleanMsg.includes(word));
 
@@ -48,4 +69,3 @@ export default async function handler(req, res) {
 
   return res.status(405).end();
 }
-
