@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+const BIBLIOTECA_IMG = "https://luna-fawn-one.vercel.app/biblioteca.jpg";
 export default async function handler(req, res) {
   // 1. Validación del Webhook de Meta (GET)
   if (req.method === 'GET') {
