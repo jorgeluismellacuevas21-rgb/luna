@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
       if (text.includes("biblioteca") || text.includes("menu") || text.includes("soluciones") || text.includes("info")) {
         await axios.post(
-          `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
+          "https://graph.facebook.com/v18.0/" + PHONE_NUMBER_ID + "/messages",
           {
             messaging_product: "whatsapp",
             to: from,
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
           },
           {
             headers: {
-              Authorization: `Bearer ${ACCESS_TOKEN}`,
+              Authorization: "Bearer " + ACCESS_TOKEN,
               "Content-Type": "application/json"
             }
           }
