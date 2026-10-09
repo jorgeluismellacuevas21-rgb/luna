@@ -1,56 +1,56 @@
-const express = require('express');
-const axios = require('axios');
-const app = express();
+import axios from 'axios';
 
-app.use(express.json());
+export default async function handler(req, res) {
+  // 1. Verificación del Webhook para Meta (GET)
+  if (req.method === 'GET') {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
 
-// 1. Verificación del Webhook para Meta
-app.get('/api/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-
-  if (mode && token) {
-    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-      console.log('WEBHOOK_VERIFIED');
-      res.status(200).send(challenge);
-    } else {
-      res.sendStatus(403);
-    }
-  }
-});
-
-// 2. Recepción y respuesta de mensajes
-app.post('/api/webhook', async (req, res) => {
-  const body = req.body;
-
-  if (body.object) {
-    if (
-      body.entry &&
-      body.entry[0].changes &&
-      body.entry[0].changes[0].value.messages &&
-      body.entry[0].changes[0].value.messages[0]
-    ) {
-      const message = body.entry[0].changes[0].value.messages[0];
-      const from = message.from;
-      const text = message.text ? message.text.body.trim().toLowerCase() : '';
-
-      console.log('Mensaje recibido de:', from, 'Texto:', text);
-
-      // Respuesta activada por palabras clave
-      if (text === 'ia' || text === 'biblioteca') {
-        await sendWhatsAppMessage(from);
+    if (mode && token) {
+      if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+        console.log('WEBHOOK_VERIFIED');
+        return res.status(200).send(challenge);
+      } else {
+        return res.status(403).send('Forbidden');
       }
     }
-    res.status(200).send('EVENT_RECEIVED');
-  } else {
-    res.sendStatus(404);
+    return res.status(400).send('Bad Request');
   }
-});
 
-// 3. Función para enviar la imagen y respuesta desde la API de Meta
+  // 2. Recepción y respuesta de mensajes (POST)
+  if (req.method === 'POST') {
+    const body = req.body;
+
+    if (body.object) {
+      if (
+        body.entry &&
+        body.entry[0].changes &&
+        body.entry[0].changes[0].value.messages &&
+        body.entry[0].changes[0].value.messages[0]
+      ) {
+        const message = body.entry[0].changes[0].value.messages[0];
+        const from = message.from;
+        const text = message.text ? message.text.body.trim().toLowerCase() : '';
+
+        console.log('Mensaje recibido de:', from, 'Texto:', text);
+
+        if (text === 'ia' || text === 'biblioteca') {
+          await sendWhatsAppMessage(from);
+        }
+      }
+      return res.status(200).send('EVENT_RECEIVED');
+    } else {
+      return res.status(404).send('Not Found');
+    }
+  }
+
+  return res.status(405).send('Method Not Allowed');
+}
+
+// 3. Función para enviar la imagen y el enlace
 async function sendWhatsAppMessage(to) {
-  const url = 'https://graph.facebook.com/v18.0/' + process.env.PHONE_NUMBER_ID + '/messages';
+  const url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
   const imageUrl = 'https://luna-fawn-one.vercel.app/biblioteca.jpg';
 
   const captionText = 
@@ -74,15 +74,13 @@ async function sendWhatsAppMessage(to) {
       },
       {
         headers: {
-          Authorization: 'Bearer ' + process.env.WHATSAPP_ACCESS_TOKEN,
+          Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
           'Content-Type': 'application/json'
         }
       }
     );
     console.log('Mensaje enviado con éxito a:', to);
   } catch (error) {
-    console.error('Error al enviar el mensaje de WhatsApp:', error.response ? error.response.data : error.message);
+    console.error('Error al enviar mensaje:', error.response ? error.response.data : error.message);
   }
 }
-
-module.exports = app;
