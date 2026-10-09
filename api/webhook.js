@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(403).send('Forbidden');
   }
 
-  // 2. Recepción y respuesta de mensajes (POST)
+  // 2. Recepción y procesamiento de mensajes (POST)
   if (req.method === 'POST') {
     const body = req.body;
 
@@ -24,44 +24,56 @@ export default async function handler(req, res) {
 
       console.log('Mensaje recibido de:', from, 'Texto:', rawText);
 
-      // Limpieza y sanitización de texto
+      // Sanitización de texto (minúsculas y sin acentos)
       const text = rawText
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
-      // CASO ESPECIAL: Si piden explícitamente "ia" o "biblioteca", envía la IMAGEN
+      // CASO ESPECIAL: Disparador de la IMAGEN de la Biblioteca IA
       if (text === 'ia' || text === 'biblioteca') {
         await sendWhatsAppImage(from);
         return res.status(200).send('EVENT_RECEIVED');
       }
 
-      // PRIORIDAD 1: JORGE LUIS (Implementa IA Academy)
+      // CATEGORÍA 1: AGENTE JORGE LUIS (Implementa IA Academy)
       const keywordsJorge = [
         '10', '120', 'implementa', 'soluciones', 'incluye', 'inteligencia',
-        'automatizar', 'agente', 'bot', 'chatbot', 'negocio', 'empresa', 'leads',
+        'automatizar', 'agente', 'bot', 'robot', 'chatbot', 'negocio', 'empresa', 'leads',
         'ventas', 'crm', 'pipeline', 'embudo', 'funnel', 'whatsapp api', 'voz',
-        'elevenlabs', 'maps', 'seo', 'ads', 'facturar', 'escalar', 'sistema', 'academy'
+        'elevenlabs', 'maps', 'seo', 'ads', 'facturar', 'escalar', 'sistema',
+        'academy', 'curso', 'capacitacion', 'software', 'agencia', 'cliente', 'programa', 'app', 'emprender'
       ];
 
-      // PRIORIDAD 2: LUNA (MellaShopCaribe)
+      // CATEGORÍA 2: AGENTE LUNA (MellaShopCaribe)
       const keywordsLuna = [
         'bella', 'nails', 'perfume', 'fragancia', 'maquillaje', 'hogar', 'casa',
         'cocina', 'bano', 'limpieza', 'decoracion', 'todo para el hogar',
         'herramientas', 'electrica', 'mecanica', 'taladro', 'destornillador',
         'ferreteria', 'bricolaje', 'taller', 'temu', 'shein', 'amazon', 'hotmart',
-        'producto', 'comprar', 'tienda', 'precio', 'envio', 'rd', 'usa'
+        'producto', 'comprar', 'tienda', 'precio', 'envio', 'rd', 'usa', 'cartera',
+        'bolso', 'ropa', 'moda', 'tenis', 'zapatos', 'reloj', 'tecnologia', 'catalogo', 'oferta', 'accesorios'
       ];
 
-      const isJorge = keywordsJorge.some(keyword => text.includes(keyword));
-      const isLuna = keywordsLuna.some(keyword => text.includes(keyword));
+      const isJorge = keywordsJorge.some(kw => text.includes(kw));
+      const isLuna = keywordsLuna.some(kw => text.includes(kw));
 
       if (isJorge) {
         const responseJorge = "Hola, soy Jorge Luis de Implementa IA Academy 🚀 10 destacadas + catalogo 120+: 1 CRM AI, 2 WhatsApp API Meta, 3 GIP-AI Videos, 4 Google Ads AI, 5 Mega Redes 2.0, 6 VideoFlow, 7 SEO, 8 LinkedIn+IG, 9 Meta Ads, 10 Voz Real. Acceso: https://go.hotmart.com/O107675193N?ap=27c6";
         await sendWhatsAppText(from, responseJorge);
       } else if (isLuna) {
-        const responseLuna = "Hola, soy LUNA de MellaShopCaribe 🛍️ Afiliación global Temu USA/España, Shein, Hotmart, Amazon USA y España. Todo para el hogar, herramientas eléctricas y mecánicas, belleza y más. Envío internacional USA/RD. ¿Qué producto buscas?";
+        let responseLuna = "";
+        if (text.includes('cartera') || text.includes('bolso') || text.includes('ropa') || text.includes('moda') || text.includes('tenis')) {
+          responseLuna = `Hola, soy LUNA de MellaShopCaribe 🛍️ ¡Excelente elección! En la categoría de *${rawText}* tenemos ofertas exclusivas en Amazon, Temu y Shein con envío a USA y RD.\n\n👉 Explora el catálogo de moda y accesorios aquí:\nhttps://linktr.ee/mellashopcaribe`;
+        } else if (text.includes('taladro') || text.includes('herramientas') || text.includes('ferreteria')) {
+          responseLuna = `Hola, soy LUNA de MellaShopCaribe 🛠️ Contamos con herramientas eléctricas y mecánicas de alta durabilidad en Amazon y Temu.\n\n👉 Mira las herramientas disponibles y precios aquí:\nhttps://linktr.ee/mellashopcaribe`;
+        } else {
+          responseLuna = "Hola, soy LUNA de MellaShopCaribe 🛍️ Afiliación global Temu USA/España, Shein, Hotmart, Amazon USA y España. Todo para el hogar, herramientas eléctricas y mecánicas, belleza y más. Envío internacional USA/RD. ¿Qué producto buscas?";
+        }
         await sendWhatsAppText(from, responseLuna);
+      } else {
+        const defaultMessage = "¡Hola! Bienvenid@. 🤖\n\n- Si buscas automatizaciones, bots e Inteligencia Artificial escribe: *IA* o *Soluciones*.\n- Si buscas productos para el hogar, moda, herramientas u ofertas de Amazon/Temu escribe: *Tienda* o el producto que necesitas (*Cartera, Taladro, Perfume*).";
+        await sendWhatsAppText(from, defaultMessage);
       }
 
       return res.status(200).send('EVENT_RECEIVED');
