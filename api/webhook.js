@@ -1,16 +1,19 @@
 import axios from "axios";
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "implementa123";
-const ACCESS_TOKEN = process.env.WHATSAPP_TOKEN;
+const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
+// LINK DE TU BIBLIOTECA - YA ESTA LIVE
 const BIBLIOTECA_IMG = "https://luna-fawn-one.vercel.app/biblioteca.jpg";
 
 export default async function handler(req, res) {
+  // 1. VerificaciÃ³n de Meta (cuando conectas el webhook)
   if (req.method === "GET") {
     const mode = req.query["hub.mode"];
     const token = req.query["hub.verify_token"];
     const challenge = req.query["hub.challenge"];
+
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
       return res.status(200).send(challenge);
     } else {
@@ -18,18 +21,21 @@ export default async function handler(req, res) {
     }
   }
 
+  // 2. Cuando llega un mensaje de WhatsApp
   if (req.method === "POST") {
     try {
       const entry = req.body.entry?.[0];
       const change = entry?.changes?.[0];
       const message = change?.value?.messages?.[0];
-
+      
       if (!message) return res.status(200).send("OK");
 
-      const from = message.from;
+      const from = message.from; // numero del cliente
       const text = message.text?.body?.toLowerCase() || "";
 
+      // Si escribe biblioteca, menÃº, info, etc -> mandamos la imagen
       if (text.includes("biblioteca") || text.includes("menu") || text.includes("soluciones") || text.includes("info")) {
+        
         await axios.post(
           "https://graph.facebook.com/v18.0/" + PHONE_NUMBER_ID + "/messages",
           {
@@ -38,7 +44,7 @@ export default async function handler(req, res) {
             type: "image",
             image: {
               link: BIBLIOTECA_IMG,
-              caption: "📚 *Biblioteca de Soluciones IA*\n\nImplementa IA Academy - 10 soluciones listas para tu negocio.\n\nEscribe el número que te interesa (1 al 10) 👇"
+              caption: "ðŸ“š *Biblioteca de Soluciones IA*\n\nImplementa IA Academy - 10 soluciones listas para tu negocio.\n\nEscribe el nÃºmero que te interesa (1 al 10) ðŸ‘‡"
             }
           },
           {
