@@ -33,7 +33,28 @@ export default async function handler(req, res) {
           const from = message.from;
           const text = message.text?.body || '';
           const lowerText = text.toLowerCase().trim();
-
+ // --- BIBLIOTECA DE SOLUCIONES ---
+      if (lowerText.includes("biblioteca") || lowerText.includes("menu") || lowerText.includes("soluciones")) {
+        await axios.post(
+          `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+          {
+            messaging_product: "whatsapp",
+            to: from,
+            type: "image",
+            image: {
+              link: BIBLIOTECA_IMG,
+              caption: "📚 *Biblioteca de Soluciones IA*\nImplementa IA Academy"
+            }
+           }
+    },
+    {
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` }
+    }
+  );
+  return res.status(200).send("OK");
+}
+      }
+      // --- FIN BIBLIOTECA ---
           // Capa Anti-Spam: Filtro de longitud
           if (text.length > 1000) {
             return res.status(200).json({ status: 'ignored_spam' });
