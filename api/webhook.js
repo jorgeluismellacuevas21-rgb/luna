@@ -1,67 +1,82 @@
-import axios from "axios";
+const express = require('express');
+const axios = require('axios');
+const app = express();
 
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "implementa123";
-const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_TOKEN;
-const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+app.use(express.json());
 
-// LINK DE TU BIBLIOTECA - YA ESTA LIVE
-const BIBLIOTECA_IMG = "https://luna-fawn-one.vercel.app/biblioteca.jpg";
+// 1. Verificación del Webhook para Meta
+app.get('/api/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
 
-export default async function handler(req, res) {
-  // 1. VerificaciÃ³n de Meta (cuando conectas el webhook)
-  if (req.method === "GET") {
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
-
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      return res.status(200).send(challenge);
+  if (mode && token) {
+    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+      console.log('WEBHOOK_VERIFIED');
+      res.status(200).send(challenge);
     } else {
-      return res.status(403).send("Forbidden");
+      res.sendStatus(403);
     }
   }
+});
 
-  // 2. Cuando llega un mensaje de WhatsApp
-  if (req.method === "POST") {
-    try {
-      const entry = req.body.entry?.[0];
-      const change = entry?.changes?.[0];
-      const message = change?.value?.messages?.[0];
-      
-      if (!message) return res.status(200).send("OK");
+// 2. Recepción y respuesta de mensajes
+app.post('/api/webhook', async (req, res) => {
+  const body = req.body;
 
-      const from = message.from; // numero del cliente
-      const text = message.text?.body?.toLowerCase() || "";
+  if (body.object) {
+    if (
+      body.entry &&
+      body.entry[0].changes &&
+      body.entry[0].changes[0].value.messages &&
+      body.entry[0].changes[0].value.messages[0]
+    ) {
+      const message = body.entry[0].changes[0].value.messages[0];
+      const from = message.from;
+      const text = message.text ? message.text.body.trim().toLowerCase() : '';
 
-      // Si escribe biblioteca, menÃº, info, etc -> mandamos la imagen
-      if (text.includes("biblioteca") || text.includes("menu") || text.includes("soluciones") || text.includes("info")) {
-        
-        await axios.post(
-          "https://graph.facebook.com/v18.0/" + PHONE_NUMBER_ID + "/messages",
-          {
-            messaging_product: "whatsapp",
-            to: from,
-            type: "image",
-            image: {
-              link: BIBLIOTECA_IMG,
-              caption: "ðŸ“š *Biblioteca de Soluciones IA*\n\nImplementa IA Academy - 10 soluciones listas para tu negocio.\n\nEscribe el nÃºmero que te interesa (1 al 10) ðŸ‘‡"
-            }
-          },
-          {
-            headers: {
-              Authorization: "Bearer " + ACCESS_TOKEN,
-              "Content-Type": "application/json"
-            }
-          }
-        );
+      console.log('Mensaje recibido de:', from, 'Texto:', text);
+
+      // Respuesta activada por palabras clave
+      if (text === 'ia' || text === 'biblioteca') {
+        await sendWhatsAppMessage(from);
       }
-
-      return res.status(200).send("OK");
-    } catch (error) {
-      console.error("Error webhook:", error.response?.data || error.message);
-      return res.status(200).send("OK");
     }
+    res.status(200).send('EVENT_RECEIVED');
+  } else {
+    res.sendStatus(404);
   }
+});
 
-  return res.status(405).send("Method not allowed");
+// 3. Función para enviar la imagen y respuesta desde la API de Meta
+async function sendWhatsAppMessage(to) {
+  const url = 'https://graph.facebook.com/v18.0/' + process.env.PHONE_NUMBER_ID + '/messages';
+  const imageUrl = 'https://luna-fawn-one.vercel.app/biblioteca.jpg';
+
+  try {
+    // Enviar imagen de la Biblioteca de Soluciones IA
+    await axios.post(
+      url,
+      {
+        messaging_product: 'whatsapp',
+        to: to,
+        type: 'image',
+        image: {
+          link: imageUrl,
+          caption: '🚀 *Biblioteca de Soluciones IA - Implementa IA Academy*\n\n¡Bienvenido! Descubre nuestro ecosistema de soluciones inteligentes para automatizar tu negocio.\n\n¿Por cuál de estas soluciones te gustaría empezar?'
+        }
+      },
+      {
+        headers: {
+          Authorization: 'Bearer ' + process.env.WHATSAPP_ACCESS_TOKEN,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    console.log('Mensaje enviado con éxito a:', to);
+  } catch (error) {
+    console.error('Error al enviar el mensaje de WhatsApp:', error.response ? error.response.data : error.message);
+  }
 }
+
+module.exports = app;
