@@ -30,17 +30,16 @@ export default async function handler(req, res) {
         const message = value?.messages?.[0];
 
         if (message) {
-          const from = message.from; // Número de teléfono del remitente
+          const from = message.from;
           const text = message.text?.body || '';
           const lowerText = text.toLowerCase().trim();
 
-          // Capa 1 Anti-Spam: Filtro de longitud de mensaje
+          // Capa Anti-Spam: Filtro de longitud
           if (text.length > 1000) {
-            console.warn(`Mensaje ignorado por exceder límite de longitud (${text.length} caracteres).`);
             return res.status(200).json({ status: 'ignored_spam' });
           }
 
-          // RUTA 1: Detección para Implementa IA Academy (Envía Imagen Desplegable HD)
+          // RUTA 1: Detección para Implementa IA Academy
           if (
             lowerText.includes('ia') ||
             lowerText.includes('implementa') ||
@@ -54,14 +53,14 @@ export default async function handler(req, res) {
               messaging_product: "whatsapp",
               recipient_type: "individual",
               to: from,
-              type: "image",
-              image: {
-                link: "https://raw.githubusercontent.com/jorgeluismellacuevas21-rgb/luna/main/public/biblioteca-ia.jpg",
-                caption: "¡Hola! Soy Jorge Luis, agente de Implementa IA Academy 🚀\n\n10 destacadas + catálogo 120+:\n1 CRM AI, 2 WhatsApp API Meta, 3 GIP-AI Videos, 4 Google Ads AI, 5 Mega Redes 2.0, 6 VideoFlow, 7 SEO, 8 LinkedIn+IG, 9 Meta Ads, 10 Voz Real\n\n¿De las 10 cuál te duele más?\nDemo 5min para USA/RD.\n\nAcceso: https://go.hotmart.com/O107675193N?ap=27c6"
+              type: "text",
+              text: {
+                preview_url: true,
+                body: "¡Hola! Soy Jorge Luis, agente de Implementa IA Academy 🚀\n\n10 destacadas + catálogo 120+:\n1 CRM AI, 2 WhatsApp API Meta, 3 GIP-AI Videos, 4 Google Ads AI, 5 Mega Redes 2.0, 6 VideoFlow, 7 SEO, 8 LinkedIn+IG, 9 Meta Ads, 10 Voz Real\n\n¿De las 10 cuál te duele más?\nDemo 5min para USA/RD.\n\nAcceso: https://go.hotmart.com/O107675193N?ap=27c6"
               }
             });
           } 
-          // RUTA 2: Detección para MellaShopCaribe (E-commerce / Afiliación Global)
+          // RUTA 2: Detección para MellaShopCaribe
           else {
             await sendWhatsAppMessage(from, {
               messaging_product: "whatsapp",
@@ -80,7 +79,7 @@ export default async function handler(req, res) {
 
       return res.status(404).json({ error: 'Event not supported' });
     } catch (error) {
-      console.error('Error procesando mensaje de WhatsApp:', error?.response?.data || error.message);
+      console.error('Error procesando mensaje:', error?.response?.data || error.message);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
@@ -88,7 +87,6 @@ export default async function handler(req, res) {
   return res.status(451).json({ error: 'Method Not Allowed' });
 }
 
-// Función auxiliar para enviar mensajes a través de WhatsApp Cloud API
 async function sendWhatsAppMessage(to, payload) {
   const url = `https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`;
   await axios.post(url, payload, {
