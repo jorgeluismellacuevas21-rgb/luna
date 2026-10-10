@@ -7,14 +7,16 @@ const LINKS = {
   amazon: 'https://www.amazon.com',
   shein: 'https://www.shein.com',
   linktree: 'https://linktr.ee/mellashopcaribe',
-  imagenBiblioteca: 'https://luna-one-black.vercel.app/biblioteca.jpg'
+  // Se usa el dominio principal de Vercel asignado a tu proyecto
+  imagenBiblioteca: 'https://luna-fawn-one.vercel.app/biblioteca.jpg'
 };
 
 // 2. Diccionario de disparo para Jorge Luis (Implementa IA Academy - PRIORIDAD ABSOLUTA)
 const IA_KEYWORDS = [
   'sdr', 'ia', 'inteligencia artificial', 'bot', 'bots', 'crm', 'automatizacion', 
   'automatización', 'prompts', 'videoflow', 'agente', 'implementa', 'soluciones',
-  'inteligencia', 'academia', 'hotmart ia', 'curso ia'
+  'inteligencia', 'academia', 'hotmart ia', 'curso ia', 'curso', 'cursos',
+  '120', 'catalogo', 'catálogo', 'sistema', 'sistemas', 'programa', 'implementa ia'
 ];
 
 // 3. Diccionario de disparo para LUNA (MellaShopCaribe / E-Commerce)
@@ -52,7 +54,7 @@ export default async function handler(req, res) {
 
       // A. RUTA JORGE LUIS (Implementa IA Academy)
       if (IA_KEYWORDS.some(key => textLower === key || textLower.includes(key))) {
-        const iaText = 
+        const iaCaption = 
           `¡Hola! Te habla Jorge Luis, especialista de Implementa IA Academy. ✨🚀\n\n` +
           `La inteligencia artificial está transformando los negocios al automatizar prospectos, ventas y contenido. Aquí te destaco las *10 Soluciones Principales* de nuestra academia:\n\n` +
           `1️⃣ *CRM AI System:* Gestión y calificado inteligente de leads.\n` +
@@ -70,8 +72,13 @@ export default async function handler(req, res) {
           `👉 ${LINKS.hotmartIA}\n\n` +
           `¿Qué proceso o área de tu empresa te gustaría automatizar hoy?`;
 
-        await sendWhatsAppText(from, iaText);
-        await sendWhatsAppImage(from, LINKS.imagenBiblioteca, "Catálogo de Soluciones - Implementa IA Academy");
+        // Intentar enviar la imagen con el texto como caption
+        const imageSent = await sendWhatsAppImage(from, LINKS.imagenBiblioteca, iaCaption);
+        
+        // Si la imagen falla por tema de servidor/URL, enviar como texto plano para asegurar que siempre reciba el link
+        if (!imageSent) {
+          await sendWhatsAppText(from, iaCaption);
+        }
       } 
       
       // B. RUTA LUNA (MellaShopCaribe / E-Commerce)
@@ -139,8 +146,10 @@ async function sendWhatsAppText(to, textBody) {
         text: { body: textBody }
       }
     });
+    return true;
   } catch (error) {
     console.error('Error enviando texto a WhatsApp:', error.response ? error.response.data : error.message);
+    return false;
   }
 }
 
@@ -163,7 +172,9 @@ async function sendWhatsAppImage(to, imageUrl, captionText) {
         }
       }
     });
+    return true;
   } catch (error) {
     console.error('Error enviando imagen a WhatsApp:', error.response ? error.response.data : error.message);
+    return false;
   }
 }
