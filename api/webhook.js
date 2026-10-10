@@ -1,36 +1,39 @@
 import axios from 'axios';
 
-// 1. Catálogo de enlaces oficiales
+// 1. Enlaces oficiales
 const LINKS = {
   hotmartIA: 'https://go.hotmart.com/O107675193N?ap=27c6',
   temu: 'https://temu.to/k/ge7bkwnomjl',
   amazon: 'https://www.amazon.com',
   shein: 'https://www.shein.com',
   linktree: 'https://linktr.ee/mellashopcaribe',
-  // Se usa el dominio principal de Vercel asignado a tu proyecto
   imagenBiblioteca: 'https://luna-fawn-one.vercel.app/biblioteca.jpg'
 };
 
-// 2. Diccionario de disparo para Jorge Luis (Implementa IA Academy - PRIORIDAD ABSOLUTA)
+// 2. Lista ultra extendida de palabras clave para Jorge Luis (IA Academy)
 const IA_KEYWORDS = [
-  'sdr', 'ia', 'inteligencia artificial', 'bot', 'bots', 'crm', 'automatizacion', 
-  'automatización', 'prompts', 'videoflow', 'agente', 'implementa', 'soluciones',
-  'inteligencia', 'academia', 'hotmart ia', 'curso ia', 'curso', 'cursos',
-  '120', 'catalogo', 'catálogo', 'sistema', 'sistemas', 'programa', 'implementa ia'
+  'sdr', 'ia', 'inteligencia', 'inteligencia artificial', 'bot', 'bots', 'crm', 
+  'automatizacion', 'automatización', 'automatizaciones', 'prompt', 'prompts', 
+  'videoflow', 'agente', 'agentes', 'implementa', 'solucion', 'soluciones', 
+  'academia', 'hotmart', 'curso', 'cursos', '120', '+120', 'catalogo', 'catálogo', 
+  'sistema', 'sistemas', 'programa', 'programas', '2', 'opcion 2', 'opción 2', 
+  'jorge', 'jorge luis', 'implementa ia', 'lead', 'leads', 'funnel', 'embudo', 
+  'embudos', 'meta ads', 'scraper', 'content creator'
 ];
 
-// 3. Diccionario de disparo para LUNA (MellaShopCaribe / E-Commerce)
+// 3. Lista ultra extendida de palabras clave para LUNA (E-Commerce)
 const ECOMMERCE_KEYWORDS = [
   'belleza', 'nails', 'perfume', 'fragancia', 'maquillaje', 'hogar', 'casa', 
   'cocina', 'bano', 'baño', 'limpieza', 'decoracion', 'decoración', 'todo para el hogar', 
   'herramientas genericas', 'herramientas', 'equipos electricos', 'mecanica', 'mecánica', 
   'taladro', 'destornillador', 'ferreteria', 'ferretera', 'bricolaje', 'taller', 
   'temu', 'shein', 'amazon', 'producto de hogar', 'compras de producto de hogar', 
-  'tienda', 'precio', 'envio', 'envío', 'rd', 'usa', 'audifonos', 'auriculares', 'luna'
+  'tienda', 'precio', 'envio', 'envío', 'rd', 'usa', 'audifonos', 'auriculares', 
+  'luna', 'zapato', 'zapatos', 'compras', 'e-commerce', 'ecommerce', '1', 'opcion 1', 'opción 1'
 ];
 
 export default async function handler(req, res) {
-  // Verificación del Webhook de Meta (GET)
+  // Verificación Webhook de Meta
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
@@ -42,7 +45,7 @@ export default async function handler(req, res) {
     return res.status(403).send('Forbidden');
   }
 
-  // Procesamiento de Mensajes Entrantes (POST)
+  // Procesamiento de Mensajes (POST)
   if (req.method === 'POST') {
     const body = req.body;
 
@@ -50,10 +53,29 @@ export default async function handler(req, res) {
       const message = body.entry[0].changes[0].value.messages[0];
       const from = message.from;
       const rawText = message.text ? message.text.body.trim() : '';
-      const textLower = rawText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      
+      // Normalizar texto: minúsculas, sin acentos ni puntuación extra
+      const cleanText = rawText
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
+      const words = cleanText.split(/\s+/);
+
+      // Coincidencia para IA (Jorge Luis)
+      const isIA = IA_KEYWORDS.some(key => 
+        cleanText === key || cleanText.includes(key) || words.includes(key)
+      );
+
+      // Coincidencia para E-Commerce (LUNA)
+      const isEcom = ECOMMERCE_KEYWORDS.some(key => 
+        cleanText === key || cleanText.includes(key) || words.includes(key)
+      );
+
+      // ----------------------------------------------------
       // A. RUTA JORGE LUIS (Implementa IA Academy)
-      if (IA_KEYWORDS.some(key => textLower === key || textLower.includes(key))) {
+      // ----------------------------------------------------
+      if (isIA) {
         const iaCaption = 
           `¡Hola! Te habla Jorge Luis, especialista de Implementa IA Academy. ✨🚀\n\n` +
           `La inteligencia artificial está transformando los negocios al automatizar prospectos, ventas y contenido. Aquí te destaco las *10 Soluciones Principales* de nuestra academia:\n\n` +
@@ -72,27 +94,29 @@ export default async function handler(req, res) {
           `👉 ${LINKS.hotmartIA}\n\n` +
           `¿Qué proceso o área de tu empresa te gustaría automatizar hoy?`;
 
-        // Intentar enviar la imagen con el texto como caption
+        // Intenta enviar primero la imagen con el texto en el caption
         const imageSent = await sendWhatsAppImage(from, LINKS.imagenBiblioteca, iaCaption);
         
-        // Si la imagen falla por tema de servidor/URL, enviar como texto plano para asegurar que siempre reciba el link
+        // Respaldo de texto directo si falla el servidor de imágenes
         if (!imageSent) {
           await sendWhatsAppText(from, iaCaption);
         }
       } 
       
+      // ----------------------------------------------------
       // B. RUTA LUNA (MellaShopCaribe / E-Commerce)
-      else if (ECOMMERCE_KEYWORDS.some(key => textLower === key || textLower.includes(key))) {
+      // ----------------------------------------------------
+      else if (isEcom) {
         let destinationLink = LINKS.linktree;
         let storeName = "nuestra tienda principal";
 
-        if (textLower.includes('temu') || textLower.includes('audifonos') || textLower.includes('auriculares')) {
+        if (cleanText.includes('temu') || cleanText.includes('audifonos') || cleanText.includes('auriculares')) {
           destinationLink = LINKS.temu;
           storeName = "el buscador directo de Temu";
-        } else if (textLower.includes('amazon')) {
+        } else if (cleanText.includes('amazon')) {
           destinationLink = LINKS.amazon;
           storeName = "el catálogo de Amazon";
-        } else if (textLower.includes('shein')) {
+        } else if (cleanText.includes('shein')) {
           destinationLink = LINKS.shein;
           storeName = "la sección oficial de Shein";
         }
@@ -109,14 +133,16 @@ export default async function handler(req, res) {
         await sendWhatsAppText(from, ecomText);
       } 
 
-      // C. SALUDO GENERAL Y MENÚ INICIAL
+      // ----------------------------------------------------
+      // C. MENÚ PRINCIPAL (Paso por defecto)
+      // ----------------------------------------------------
       else {
         const welcomeText = 
           `¡Hola! Te damos la bienvenida a MellaShopCaribe. 🛍️✨💻\n\n` +
           `Estamos listos para ayudarte en dos áreas principales:\n\n` +
-          `1️⃣ *E-Commerce & Compras:* Belleza, herramientas, hogar y tecnología para RD y USA (Atendido por LUNA).\n` +
+          `1️⃣ *E-Commerce & Compras:* Belleza, herramientas, hogar, zapatos y tecnología para RD y USA (Atendido por LUNA).\n` +
           `2️⃣ *Inteligencia Artificial & Automatizaciones:* Catálogo de +120 soluciones y sistemas con Implementa IA Academy (Atendido por Jorge Luis).\n\n` +
-          `Escríbenos qué producto o solución necesitas y con gusto te guiamos.`;
+          `Escríbenos el número *1* o *2*, o cuéntanos qué producto o solución necesitas.`;
 
         await sendWhatsAppText(from, welcomeText);
       }
@@ -128,7 +154,9 @@ export default async function handler(req, res) {
   return res.status(405).send('Method Not Allowed');
 }
 
-// FUNCIONES AUXILIARES DE ENVÍO POR API DE META
+// ----------------------------------------------------
+// FUNCIONES AUXILIARES PARA ENVÍO CON META API
+// ----------------------------------------------------
 
 async function sendWhatsAppText(to, textBody) {
   try {
@@ -148,7 +176,7 @@ async function sendWhatsAppText(to, textBody) {
     });
     return true;
   } catch (error) {
-    console.error('Error enviando texto a WhatsApp:', error.response ? error.response.data : error.message);
+    console.error('Error texto:', error.response?.data || error.message);
     return false;
   }
 }
@@ -174,7 +202,7 @@ async function sendWhatsAppImage(to, imageUrl, captionText) {
     });
     return true;
   } catch (error) {
-    console.error('Error enviando imagen a WhatsApp:', error.response ? error.response.data : error.message);
+    console.error('Error imagen:', error.response?.data || error.message);
     return false;
   }
 }
