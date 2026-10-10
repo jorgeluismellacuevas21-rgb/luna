@@ -10,8 +10,8 @@ const LINKS = {
   imagenBiblioteca: 'https://raw.githubusercontent.com/jorgeluismellacuevas21-rgb/luna/main/public/biblioteca.jpg'
 };
 
-// 2. Diccionarios de disparo
-const IA_KEYWORDS = ['sdr', 'ia', 'inteligencia', 'bot', 'bots', 'crm', 'automatizacion', 'automatización', '120', 'catalogo', 'catálogo', 'sistema', 'sistemas', '2', 'academia', 'jorge', 'ceo', 'analisis ceo'];
+// 2. Diccionarios de palabras clave
+const IA_KEYWORDS = ['sdr', 'ia', 'inteligencia', 'bot', 'bots', 'crm', 'automatizacion', 'automatización', '120', 'catalogo', 'catálogo', 'sistema', 'sistemas', '2', 'academia', 'jorge', 'ceo', 'analisis ceo', 'análisis ceo'];
 const ECOMMERCE_KEYWORDS = ['belleza', 'hogar', 'herramientas', 'temu', 'shein', 'amazon', '1', 'luna', 'zapato', 'zapatos', 'compras', 'cartera', 'carteras', 'otros'];
 
 export default async function handler(req, res) {
@@ -39,9 +39,9 @@ export default async function handler(req, res) {
       const isIA = IA_KEYWORDS.some(key => cleanText.includes(key));
       const isEcom = ECOMMERCE_KEYWORDS.some(key => cleanText.includes(key));
 
-      // A. RUTA JORGE LUIS (IA ACADEMY) CON IMAGEN + TEXTO UNIDOS
+      // A. RUTA JORGE LUIS (IA ACADEMY)
       if (isIA) {
-        const iaCaption = 
+        const iaText = 
           `¡Hola! Te habla Jorge Luis, especialista de Implementa IA Academy. ✨🚀\n\n` +
           `La inteligencia artificial está transformando los negocios al automatizar prospectos, ventas y análisis de gestión. Aquí te destaco las *10 Soluciones Principales* de nuestra academia:\n\n` +
           `1️⃣ *SDR Multi-Agent:* Calificación y prospección automática.\n` +
@@ -59,7 +59,11 @@ export default async function handler(req, res) {
           `👉 ${LINKS.hotmartIA}\n\n` +
           `¿Qué proceso de tu empresa te gustaría automatizar hoy?`;
 
-        await sendWhatsAppImageWithCaption(from, LINKS.imagenBiblioteca, iaCaption);
+        // 1. Envío del texto principal (Seguro y garantizado)
+        await sendWhatsAppText(from, iaText);
+
+        // 2. Envío de la tarjeta gráfica en mensaje secundario (Caption corto y seguro)
+        await sendWhatsAppImage(from, LINKS.imagenBiblioteca, 'Biblioteca de Soluciones IA (+120 Sistemas) - Implementa IA Academy');
 
       } 
       // B. RUTA LUNA (E-COMMERCE)
@@ -92,6 +96,7 @@ export default async function handler(req, res) {
   return res.status(405).send('Method Not Allowed');
 }
 
+// FUNCIONES AUXILIARES DE ENVÍO
 async function sendWhatsAppText(to, textBody) {
   try {
     await axios({
@@ -109,11 +114,11 @@ async function sendWhatsAppText(to, textBody) {
       }
     });
   } catch (error) {
-    console.error('Error texto:', error.response?.data || error.message);
+    console.error('Error enviando texto:', error.response?.data || error.message);
   }
 }
 
-async function sendWhatsAppImageWithCaption(to, imageUrl, captionText) {
+async function sendWhatsAppImage(to, imageUrl, captionText) {
   try {
     await axios({
       method: 'POST',
@@ -133,6 +138,6 @@ async function sendWhatsAppImageWithCaption(to, imageUrl, captionText) {
       }
     });
   } catch (error) {
-    console.error('Error imagen+caption:', error.response?.data || error.message);
+    console.error('Error enviando imagen:', error.response?.data || error.message);
   }
 }
