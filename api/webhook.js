@@ -10,11 +10,11 @@ const LINKS = {
   imagenBiblioteca: 'https://luna-one-black.vercel.app/biblioteca.jpg'
 };
 
-// 2. Diccionario de disparo para Jorge Luis (Implementa IA Academy - PRIORIDAD 1)
+// 2. Diccionario de disparo para Jorge Luis (Implementa IA Academy - PRIORIDAD ABSOLUTA)
 const IA_KEYWORDS = [
-  'ia', 'inteligencia artificial', 'bot', 'bots', 'sdr', 'crm', 'automatizacion', 
+  'sdr', 'ia', 'inteligencia artificial', 'bot', 'bots', 'crm', 'automatizacion', 
   'automatización', 'prompts', 'videoflow', 'agente', 'implementa', 'soluciones',
-  'implementa ia', 'hotmart ia', 'curso ia', 'academia'
+  'inteligencia', 'academia', 'hotmart ia', 'curso ia'
 ];
 
 // 3. Diccionario de disparo para LUNA (MellaShopCaribe / E-Commerce)
@@ -24,7 +24,7 @@ const ECOMMERCE_KEYWORDS = [
   'herramientas genericas', 'herramientas', 'equipos electricos', 'mecanica', 'mecánica', 
   'taladro', 'destornillador', 'ferreteria', 'ferretera', 'bricolaje', 'taller', 
   'temu', 'shein', 'amazon', 'producto de hogar', 'compras de producto de hogar', 
-  'tienda', 'precio', 'envio', 'envío', 'rd', 'usa', 'audifonos', 'auriculares'
+  'tienda', 'precio', 'envio', 'envío', 'rd', 'usa', 'audifonos', 'auriculares', 'luna'
 ];
 
 export default async function handler(req, res) {
@@ -50,9 +50,9 @@ export default async function handler(req, res) {
       const rawText = message.text ? message.text.body.trim() : '';
       const textLower = rawText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-      // A. RUTA JORGE LUIS (Implementa IA Academy: Prioridad en la detección)
-      if (IA_KEYWORDS.some(key => textLower.includes(key))) {
-        const iaCaption = 
+      // A. RUTA JORGE LUIS (Implementa IA Academy: SDR / IA / Automatización)
+      if (IA_KEYWORDS.some(key => textLower === key || textLower.includes(key))) {
+        const iaText = 
           `¡Hola! Te habla Jorge Luis, especialista de Implementa IA Academy. 🤖✨\n\n` +
           `La inteligencia artificial está transformando los negocios al automatizar prospectos, ventas y contenido. Aquí te destaco las **10 Soluciones Principales** de nuestra academia:\n\n` +
           `1️⃣ **CRM AI System:** Gestión y calificado inteligente de leads.\n` +
@@ -70,15 +70,12 @@ export default async function handler(req, res) {
           `👉 ${LINKS.hotmartIA}\n\n` +
           `¿Qué proceso o área de tu empresa te gustaría automatizar hoy?`;
 
-        // Intenta enviar con imagen; si falla la imagen, envía el texto completo de respaldo
-        const imageSent = await sendWhatsAppImage(from, LINKS.imagenBiblioteca, iaCaption);
-        if (!imageSent) {
-          await sendWhatsAppText(from, iaCaption);
-        }
+        await sendWhatsAppText(from, iaText);
+        await sendWhatsAppImage(from, LINKS.imagenBiblioteca, "Catálogo de Soluciones - Implementa IA Academy");
       } 
       
-      // B. RUTA LUNA (MellaShopCaribe / E-Commerce y Afiliados)
-      else if (ECOMMERCE_KEYWORDS.some(key => textLower.includes(key))) {
+      // B. RUTA LUNA (MellaShopCaribe / E-Commerce)
+      else if (ECOMMERCE_KEYWORDS.some(key => textLower === key || textLower.includes(key))) {
         let destinationLink = LINKS.linktree;
         let storeName = "nuestra tienda principal";
 
@@ -105,10 +102,10 @@ export default async function handler(req, res) {
         await sendWhatsAppText(from, ecomText);
       } 
 
-      // C. SALUDO GENERAL Y MENÚ INICIAL
+      // C. SALUDO GENERAL Y MENÚ INICIAL (Sin ícono rojo, limpio)
       else {
         const welcomeText = 
-          `¡Hola! Te damos la bienvenida a MellaShopCaribe. 🛍️🤖\n\n` +
+          `¡Hola! Te damos la bienvenida a MellaShopCaribe. 🛍️✨💻\n\n` +
           `Estamos listos para ayudarte en dos áreas principales:\n\n` +
           `1️⃣ **E-Commerce & Compras:** Belleza, herramientas, hogar y tecnología para RD y USA (Atendido por LUNA).\n` +
           `2️⃣ **Inteligencia Artificial & Automatizaciones:** Catálogo de +120 soluciones y sistemas con Implementa IA Academy (Atendido por Jorge Luis).\n\n` +
@@ -142,10 +139,8 @@ async function sendWhatsAppText(to, textBody) {
         text: { body: textBody }
       }
     });
-    return true;
   } catch (error) {
     console.error('Error enviando texto a WhatsApp:', error.response ? error.response.data : error.message);
-    return false;
   }
 }
 
@@ -168,9 +163,7 @@ async function sendWhatsAppImage(to, imageUrl, captionText) {
         }
       }
     });
-    return true;
   } catch (error) {
     console.error('Error enviando imagen a WhatsApp:', error.response ? error.response.data : error.message);
-    return false;
   }
 }
