@@ -30,9 +30,9 @@ export default async function handler(req, res) {
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
-      // CASO ESPECIAL: Disparador de la IMAGEN de la Biblioteca IA
-      if (text === 'ia' || text === 'biblioteca') {
-        await sendWhatsAppImage(from);
+      // CASO ESPECIAL: Tarjeta gráfica de la Biblioteca IA (solo cuando es exactamente "ia")
+      if (text === 'ia') {
+        await sendWhatsAppImageWithPresentation(from);
         return res.status(200).send('EVENT_RECEIVED');
       }
 
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
         'automatizar', 'agente', 'bot', 'robot', 'chatbot', 'negocio', 'empresa', 'leads',
         'ventas', 'crm', 'pipeline', 'embudo', 'funnel', 'whatsapp api', 'voz',
         'elevenlabs', 'maps', 'seo', 'ads', 'facturar', 'escalar', 'sistema',
-        'academy', 'curso', 'capacitacion', 'software', 'agencia', 'cliente', 'programa', 'app', 'emprender'
+        'academy', 'curso', 'capacitacion', 'software', 'agencia', 'cliente', 'programa', 'app', 'emprender', 'biblioteca'
       ];
 
       // CATEGORÍA 2: AGENTE LUNA (MellaShopCaribe)
@@ -52,7 +52,9 @@ export default async function handler(req, res) {
         'herramientas', 'electrica', 'mecanica', 'taladro', 'destornillador',
         'ferreteria', 'bricolaje', 'taller', 'temu', 'shein', 'amazon', 'hotmart',
         'producto', 'comprar', 'tienda', 'precio', 'envio', 'rd', 'usa', 'cartera',
-        'bolso', 'ropa', 'moda', 'tenis', 'zapatos', 'reloj', 'tecnologia', 'catalogo', 'oferta', 'accesorios'
+        'bolso', 'ropa', 'moda', 'tenis', 'zapatos', 'reloj', 'tecnologia', 'catalogo',
+        'oferta', 'accesorios', 'cargador', 'cargadores', 'cargadore', 'cable',
+        'adaptador', 'audifonos', 'celular', 'telefono', 'audifono', 'auriculares'
       ];
 
       const isJorge = keywordsJorge.some(kw => text.includes(kw));
@@ -63,13 +65,16 @@ export default async function handler(req, res) {
         await sendWhatsAppText(from, responseJorge);
       } else if (isLuna) {
         let responseLuna = "";
-        if (text.includes('cartera') || text.includes('bolso') || text.includes('ropa') || text.includes('moda') || text.includes('tenis')) {
-          responseLuna = `Hola, soy LUNA de MellaShopCaribe 🛍️ ¡Excelente elección! En la categoría de *${rawText}* tenemos ofertas exclusivas en Amazon, Temu y Shein con envío a USA y RD.\n\n👉 Explora el catálogo de moda y accesorios aquí:\nhttps://linktr.ee/mellashopcaribe`;
-        } else if (text.includes('taladro') || text.includes('herramientas') || text.includes('ferreteria')) {
-          responseLuna = `Hola, soy LUNA de MellaShopCaribe 🛠️ Contamos con herramientas eléctricas y mecánicas de alta durabilidad en Amazon y Temu.\n\n👉 Mira las herramientas disponibles y precios aquí:\nhttps://linktr.ee/mellashopcaribe`;
+
+        // EVALUACIÓN EXCLUYENTE: Solo se elige UN enlace por mensaje
+        if (text.includes('audifono') || text.includes('audifonos') || text.includes('auriculares') || text.includes('kz')) {
+          // SOLO ENLACE 1 (Temu Producto Específico)
+          responseLuna = "Hola, soy LUNA de MellaShopCaribe 🎧 Aquí tienes la oferta especial de Auriculares KZ EDX Pro X en Temu:\nhttps://temu.to/k/ge7bkwnomjl";
         } else {
-          responseLuna = "Hola, soy LUNA de MellaShopCaribe 🛍️ Afiliación global Temu USA/España, Shein, Hotmart, Amazon USA y España. Todo para el hogar, herramientas eléctricas y mecánicas, belleza y más. Envío internacional USA/RD. ¿Qué producto buscas?";
+          // SOLO ENLACE 2 (Linktree General)
+          responseLuna = "Hola, soy LUNA de MellaShopCaribe 🛍️ Afiliación global Temu USA/España, Shein, Hotmart, Amazon USA y España. Todo para el hogar, herramientas, tecnología, belleza y moda. Envío internacional USA/RD.\n\n👉 Explora todas las ofertas y el catálogo completo aquí:\nhttps://linktr.ee/mellashopcaribe";
         }
+
         await sendWhatsAppText(from, responseLuna);
       } else {
         const defaultMessage = "¡Hola! Bienvenid@. 🤖\n\n- Si buscas automatizaciones, bots e Inteligencia Artificial escribe: *IA* o *Soluciones*.\n- Si buscas productos para el hogar, moda, herramientas u ofertas de Amazon/Temu escribe: *Tienda* o el producto que necesitas (*Cartera, Taladro, Perfume*).";
@@ -84,14 +89,14 @@ export default async function handler(req, res) {
   return res.status(405).send('Method Not Allowed');
 }
 
-// Función para enviar la IMAGEN de la Biblioteca IA
-async function sendWhatsAppImage(to) {
+// Función para enviar la IMAGEN con la presentación oficial
+async function sendWhatsAppImageWithPresentation(to) {
   const url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
   const imageUrl = 'https://luna-fawn-one.vercel.app/biblioteca.jpg';
 
   const captionText = 
-    '🚀 *Biblioteca de Soluciones IA - Implementa IA Academy*\n\n' +
-    '10 soluciones de Inteligencia Artificial listas para automatizar y escalar tu negocio.\n\n' +
+    'Hola, soy Jorge Luis de Implementa IA Academy 🚀\n\n' +
+    'Te presento nuestra *Biblioteca de Soluciones IA*: 10 soluciones de Inteligencia Artificial listas para automatizar y escalar tu negocio.\n\n' +
     '🔗 *Acceso inmediato al catálogo completo:*\n' +
     'https://go.hotmart.com/O107675193N?ap=27c6\n\n' +
     'Escribe el número de la solución que más te interesa (del 1 al 10) para ver una demostración.';
