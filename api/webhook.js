@@ -61,23 +61,21 @@ export default async function handler(req, res) {
       const isLuna = keywordsLuna.some(kw => text.includes(kw));
 
       if (isJorge) {
-        const responseJorge = "Hola, soy Jorge Luis de Implementa IA Academy 🚀 10 destacadas + catalogo 120+: 1 CRM AI, 2 WhatsApp API Meta, 3 GIP-AI Videos, 4 Google Ads AI, 5 Mega Redes 2.0, 6 VideoFlow, 7 SEO, 8 LinkedIn+IG, 9 Meta Ads, 10 Voz Real. Acceso: https://go.hotmart.com/O107675193N?ap=27c6";
+        const responseJorge = "Hola, soy Jorge Luis de Implementa IA Academy 🚀 10 destacadas + catálogo 120+: 1 CRM AI, 2 WhatsApp API Meta, 3 GIP-AI Videos, 4 Google Ads AI, 5 Mega Redes 2.0, 6 VideoFlow, 7 SEO, 8 LinkedIn+IG, 9 Meta Ads, 10 Voz Real. Acceso: https://go.hotmart.com/O107675193N?ap=27c6";
         await sendWhatsAppText(from, responseJorge);
       } else if (isLuna) {
         let responseLuna = "";
 
-        // EVALUACIÓN EXCLUYENTE: Solo se elige UN enlace por mensaje
         if (text.includes('audifono') || text.includes('audifonos') || text.includes('auriculares') || text.includes('kz')) {
-          // SOLO ENLACE 1 (Temu Producto Específico)
           responseLuna = "Hola, soy LUNA de MellaShopCaribe 🎧 Aquí tienes la oferta especial de Auriculares KZ EDX Pro X en Temu:\nhttps://temu.to/k/ge7bkwnomjl";
         } else {
-          // SOLO ENLACE 2 (Linktree General)
           responseLuna = "Hola, soy LUNA de MellaShopCaribe 🛍️ Afiliación global Temu USA/España, Shein, Hotmart, Amazon USA y España. Todo para el hogar, herramientas, tecnología, belleza y moda. Envío internacional USA/RD.\n\n👉 Explora todas las ofertas y el catálogo completo aquí:\nhttps://linktr.ee/mellashopcaribe";
         }
 
         await sendWhatsAppText(from, responseLuna);
       } else {
-        const defaultMessage = "¡Hola! Bienvenid@. 🤖\n\n- Si buscas automatizaciones, bots e Inteligencia Artificial escribe: *IA* o *Soluciones*.\n- Si buscas productos para el hogar, moda, herramientas u ofertas de Amazon/Temu escribe: *Tienda* o el producto que necesitas (*Cartera, Taladro, Perfume*).";
+        // MENSAJE DE BIENVENIDA PERSONALIZADO PARA MELLASHOPCARIBE
+        const defaultMessage = "¡Hola! Bienvenid@ a MellaShopCaribe 🛍️🤖\n\n- Si buscas automatizaciones, bots e Inteligencia Artificial escribe: *IA* o *Soluciones*.\n- Si buscas productos para el hogar, moda, herramientas u ofertas de Amazon/Temu escribe: *Tienda* o el producto que necesitas (*Cartera, Taladro, Perfume*).";
         await sendWhatsAppText(from, defaultMessage);
       }
 
@@ -89,14 +87,24 @@ export default async function handler(req, res) {
   return res.status(405).send('Method Not Allowed');
 }
 
-// Función para enviar la IMAGEN con la presentación oficial
+// Función para enviar la IMAGEN con la presentación oficial completa
 async function sendWhatsAppImageWithPresentation(to) {
   const url = `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`;
   const imageUrl = 'https://luna-fawn-one.vercel.app/biblioteca.jpg';
 
   const captionText = 
     'Hola, soy Jorge Luis de Implementa IA Academy 🚀\n\n' +
-    'Te presento nuestra *Biblioteca de Soluciones IA*: 10 soluciones de Inteligencia Artificial listas para automatizar y escalar tu negocio.\n\n' +
+    'Te presento nuestra *Biblioteca de Soluciones IA*: 10 soluciones destacadas + catálogo de 120+ herramientas listas para automatizar y escalar tu negocio:\n\n' +
+    '1️⃣ CRM AI\n' +
+    '2️⃣ WhatsApp API Meta\n' +
+    '3️⃣ GIP-AI Videos\n' +
+    '4️⃣ Google Ads AI\n' +
+    '5️⃣ Mega Redes 2.0\n' +
+    '6️⃣ VideoFlow\n' +
+    '7️⃣ SEO\n' +
+    '8️⃣ LinkedIn+IG\n' +
+    '9️⃣ Meta Ads\n' +
+    '🔟 Voz Real\n\n' +
     '🔗 *Acceso inmediato al catálogo completo:*\n' +
     'https://go.hotmart.com/O107675193N?ap=27c6\n\n' +
     'Escribe el número de la solución que más te interesa (del 1 al 10) para ver una demostración.';
