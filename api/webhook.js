@@ -7,7 +7,7 @@ const LINKS = {
   amazon: 'https://www.amazon.com',
   shein: 'https://www.shein.com',
   linktree: 'https://linktr.ee/mellashopcaribe',
-  imagenBiblioteca: 'https://luna-fawn-one.vercel.app/biblioteca.jpg'
+ imagenBiblioteca: 'https://raw.githubusercontent.com/jorgeluismellacuevas21-rgb/luna/main/public/biblioteca.jpg'
 };
 
 // 2. Lista ultra extendida de palabras clave para Jorge Luis (IA Academy)
