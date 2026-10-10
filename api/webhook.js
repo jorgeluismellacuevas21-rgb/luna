@@ -10,20 +10,21 @@ const LINKS = {
   imagenBiblioteca: 'https://luna-one-black.vercel.app/biblioteca.jpg'
 };
 
-// 2. Diccionario de disparo para LUNA (MellaShopCaribe / E-Commerce)
+// 2. Diccionario de disparo para Jorge Luis (Implementa IA Academy - PRIORIDAD 1)
+const IA_KEYWORDS = [
+  'ia', 'inteligencia artificial', 'bot', 'bots', 'sdr', 'crm', 'automatizacion', 
+  'automatización', 'prompts', 'videoflow', 'agente', 'implementa', 'soluciones',
+  'implementa ia', 'hotmart ia', 'curso ia', 'academia'
+];
+
+// 3. Diccionario de disparo para LUNA (MellaShopCaribe / E-Commerce)
 const ECOMMERCE_KEYWORDS = [
   'belleza', 'nails', 'perfume', 'fragancia', 'maquillaje', 'hogar', 'casa', 
   'cocina', 'bano', 'baño', 'limpieza', 'decoracion', 'decoración', 'todo para el hogar', 
   'herramientas genericas', 'herramientas', 'equipos electricos', 'mecanica', 'mecánica', 
   'taladro', 'destornillador', 'ferreteria', 'ferretera', 'bricolaje', 'taller', 
-  'temu', 'shein', 'amazon', 'hotmart', 'producto de hogar', 'compras de producto de hogar', 
+  'temu', 'shein', 'amazon', 'producto de hogar', 'compras de producto de hogar', 
   'tienda', 'precio', 'envio', 'envío', 'rd', 'usa', 'audifonos', 'auriculares'
-];
-
-// 3. Diccionario de disparo para Jorge Luis (Implementa IA Academy)
-const IA_KEYWORDS = [
-  'ia', 'inteligencia artificial', 'bot', 'bots', 'sdr', 'crm', 'automatizacion', 
-  'automatización', 'prompts', 'videoflow', 'agente', 'implementa', 'soluciones'
 ];
 
 export default async function handler(req, res) {
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
       const rawText = message.text ? message.text.body.trim() : '';
       const textLower = rawText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-      // A. RUTA JORGE LUIS (Implementa IA Academy: Tarjeta + 1-10 destacados + 120+ Catálogo)
+      // A. RUTA JORGE LUIS (Implementa IA Academy: Prioridad en la detección)
       if (IA_KEYWORDS.some(key => textLower.includes(key))) {
         const iaCaption = 
           `¡Hola! Te habla Jorge Luis, especialista de Implementa IA Academy. 🤖✨\n\n` +
@@ -69,7 +70,11 @@ export default async function handler(req, res) {
           `👉 ${LINKS.hotmartIA}\n\n` +
           `¿Qué proceso o área de tu empresa te gustaría automatizar hoy?`;
 
-        await sendWhatsAppImage(from, LINKS.imagenBiblioteca, iaCaption);
+        // Intenta enviar con imagen; si falla la imagen, envía el texto completo de respaldo
+        const imageSent = await sendWhatsAppImage(from, LINKS.imagenBiblioteca, iaCaption);
+        if (!imageSent) {
+          await sendWhatsAppText(from, iaCaption);
+        }
       } 
       
       // B. RUTA LUNA (MellaShopCaribe / E-Commerce y Afiliados)
@@ -86,9 +91,6 @@ export default async function handler(req, res) {
         } else if (textLower.includes('shein')) {
           destinationLink = LINKS.shein;
           storeName = "la sección oficial de Shein";
-        } else if (textLower.includes('hotmart')) {
-          destinationLink = LINKS.hotmartIA;
-          storeName = "nuestra oferta digital en Hotmart";
         }
 
         const ecomText = 
@@ -140,8 +142,10 @@ async function sendWhatsAppText(to, textBody) {
         text: { body: textBody }
       }
     });
+    return true;
   } catch (error) {
     console.error('Error enviando texto a WhatsApp:', error.response ? error.response.data : error.message);
+    return false;
   }
 }
 
@@ -164,7 +168,9 @@ async function sendWhatsAppImage(to, imageUrl, captionText) {
         }
       }
     });
+    return true;
   } catch (error) {
     console.error('Error enviando imagen a WhatsApp:', error.response ? error.response.data : error.message);
+    return false;
   }
 }
