@@ -1,16 +1,31 @@
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+// Conexión directa a Supabase
+const SUPABASE_URL = 'TU_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const LINKS = {
-  hotmartIA: 'https://go.hotmart.com/O107675193N?ap=27c6',
-  temu: 'https://temu.to/k/ge7bkwnomjl',
-  amazon: 'https://www.amazon.com',
-  shein: 'https://www.shein.com',
-  linktree: 'https://linktr.ee/mellashopcaribe',
-  imagenBiblioteca: 'https://raw.githubusercontent.com/jorgeluismellacuevas21-rgb/luna/main/public/biblioteca.jpg'
-};
+async function sendWhatsAppMessage(to, textBody) {
+  try {
+    await axios({
+      method: 'POST',
+      url: `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      headers: {
+        'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        messaging_product: 'whatsapp',
+        to: to,
+        type: 'text',
+        text: { body: textBody }
+      }
+    });
+  } catch (error) {
+    console.error('Error enviando texto:', error.response?.data || error.message);
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -32,7 +47,7 @@ export default async function handler(req, res) {
       const from = message.from;
       const text = message.text?.body || '';
 
-      // Consulta dinámica a Supabase para obtener el Prompt Master oficial
+      // Obtener el Prompt Master desde Supabase
       const { data: promptData, error: promptError } = await supabase
         .from('prompts')
         .select('prompt_text')
@@ -45,9 +60,29 @@ export default async function handler(req, res) {
 
       const systemPrompt = promptData ? promptData.prompt_text : "Eres un asistente virtual de MellaShop Caribe e Implementa IA Academy.";
 
-      // Lógica de respuesta usando el systemPrompt devuelto por Supabase
-      console.log('Mensaje recibido:', text);
-      console.log('Prompt cargado de Supabase:', systemPrompt ? 'OK' : 'FAIL');
+      try {
+        const aiResponse = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: text }
+            ]
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const replyMessage = aiResponse.data.choices[0].message.content;
+        await sendWhatsAppMessage(from, replyMessage);
+      } catch (err) {
+        console.error('Error en la API de IA:', err.response?.data || err.message);
+      }
     }
 
     return res.status(200).send('EVENT_RECEIVED');
