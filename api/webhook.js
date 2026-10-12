@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
 
-// Conexión directa a Supabase
-const SUPABASE_URL = 'TU_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+// Credenciales quirúrgicas de Supabase
+const SUPABASE_URL = 'https://tdtrisvlyxfhpofsoydg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkdHJpc3ZseXhmaHBvZnNveWRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgwMzE4OTYsImV4cCI6MjA0MzYwNzg5Nn0.2XlG-5-8A1z9G4c82S9D9E0F1G2H3I4J5K6L7M8N9O0';
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function sendWhatsAppMessage(to, textBody) {
