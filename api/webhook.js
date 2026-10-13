@@ -1,16 +1,15 @@
 // api/webhook-lovable-test.js
 // Webhook de PRUEBA para WhatsApp + Supabase (MellaShopCaribe)
-// NO reemplaza a api/webhook.js — convive en paralelo
+// NO reemplaza a api/webhook.js - convive en paralelo
 
 const { createClient } = require('@supabase/supabase-js');
 
-// ── Variables de entorno ──
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
-// ── Ofertas intocables ──
+// --- OFERTAS INTOCABLES CORREGIDAS ---
 const HOTMART_URL = 'https://go.hotmart.com/O187675193N?ap=27c6';
 const AMAZON_TAG = 'tag=jorgemella-21';
 
@@ -19,19 +18,19 @@ const OFERTAS = {
     tipo: 'HOTMART',
     nombre: 'Biblioteca de Soluciones IA',
     url: HOTMART_URL,
-    texto: 'Hoy te recomiendo la Biblioteca de Soluciones IA: plantillas y herramientas listas para vender más con inteligencia artificial. Acceso inmediato aquí: ' + HOTMART_URL,
+    texto: 'Hoy te recomiendo la Biblioteca de Soluciones IA: plantillas y herramientas listas para vender mas con inteligencia artificial. Acceso inmediato aqui: ' + HOTMART_URL,
   },
   AMAZON: {
     tipo: 'AMAZON',
     nombre: 'Stanley',
     url: `https://www.amazon.com/dp/B0C8NQZ6Z3?${AMAZON_TAG}`,
-    texto: `Oferta del día: termo Stanley, el favorito para mantener tu bebida fría todo el día. Cómpralo aquí: https://www.amazon.com/dp/B0C8NQZ6Z3?${AMAZON_TAG}`,
+    texto: `Oferta del dia: termo Stanley, el favorito para mantener tu bebida fria todo el dia. Compralo aqui: https://www.amazon.com/dp/B0C8NQZ6Z3?${AMAZON_TAG}`,
   },
 };
 
 function getOfertaHoy() {
   const ahora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
-  const dia = ahora.getDay(); // 0 = domingo
+  const dia = ahora.getDay();
   return dia === 0? OFERTAS.AMAZON : OFERTAS.HOTMART;
 }
 
