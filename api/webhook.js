@@ -41,17 +41,12 @@ function buildCaption(oferta) {
 
 async function guardarCliente(supabase, { telefono, nombre }) {
   const { data, error } = await supabase
-   .from('clientes')
-   .upsert(
-      {
-        telefono,
-        nombre: nombre || null,
-        ultimo_contacto: new Date().toISOString(),
-      },
+  .from('clientes')
+  .upsert(
+      { telefono, nombre: nombre || null, ultimo_contacto: new Date().toISOString() },
       { onConflict: 'telefono' }
     )
-   .select();
-
+  .select();
   if (error) {
     console.error('Error RLS/upsert clientes:', error.message);
     return { ok: false, error: error.message };
@@ -95,7 +90,6 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     try {
       const body = req.body || {};
-
       if (body.test === true) {
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
         const oferta = getOfertaHoy();
@@ -104,11 +98,9 @@ module.exports = async (req, res) => {
           telefono: body.telefono || 'test-000',
           nombre: body.nombre || 'Test Panel',
         });
-
         if (!guardado.ok) {
           return res.status(200).json({ log: 'Error RLS', detalle: guardado.error, oferta: oferta.tipo });
         }
-
         return res.status(200).json({ log: '200 OK', oferta: oferta.tipo, caption, cliente: guardado.data });
       }
 
@@ -144,6 +136,5 @@ module.exports = async (req, res) => {
       return res.status(200).json({ log: 'Error', detalle: err.message });
     }
   }
-
   return res.status(405).send('Method Not Allowed');
 };
