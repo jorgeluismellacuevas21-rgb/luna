@@ -40,9 +40,9 @@ function buildCaption(oferta) {
 
 async function guardarCliente(supabase, { telefono, nombre }) {
   const { data, error } = await supabase
-.from('clientes')
-.upsert({ telefono, nombre: nombre || null, ultimo_contacto: new Date().toISOString() }, { onConflict: 'telefono' })
-.select();
+ .from('clientes')
+ .upsert({ telefono, nombre: nombre || null, ultimo_contacto: new Date().toISOString() }, { onConflict: 'telefono' })
+ .select();
   if (error) { console.error('Error RLS/upsert clientes:', error.message); return { ok: false, error: error.message }; }
   return { ok: true, data };
 }
